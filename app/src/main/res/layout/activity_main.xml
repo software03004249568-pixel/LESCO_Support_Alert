@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F8FC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="LESCO Complaint Alert"
+            android:textColor="#0D47A1"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/connectionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="● Monitoring Stopped"
+            android:textSize="15sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:text="Monitoring Configuration"
+                    android:textSize="19sp"
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Google Apps Script Web App URL">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/urlEdit"
+                        android:inputType="textUri"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="API Key">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/keyEdit"
+                        android:inputType="textPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="14dp">
+
+                    <Button
+                        android:id="@+id/startButton"
+                        android:text="Start Monitoring"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/stopButton"
+                        android:text="Stop"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.45"
+                        android:layout_marginStart="8dp"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:text="Dashboard"
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/totalText"
+                android:text="Total\n0"
+                android:gravity="center"
+                android:textSize="18sp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:layout_height="90dp"/>
+
+            <TextView
+                android:id="@+id/newText"
+                android:text="New\n0"
+                android:gravity="center"
+                android:textSize="18sp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:layout_height="90dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/progressText"
+                android:text="In Progress\n0"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:layout_height="90dp"/>
+
+            <TextView
+                android:id="@+id/urgentText"
+                android:text="Urgent\n0"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:layout_height="90dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/lastTicketText"
+            android:text="Last Ticket: —"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/refreshButton"
+            android:text="Refresh Dashboard"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+</ScrollView>
