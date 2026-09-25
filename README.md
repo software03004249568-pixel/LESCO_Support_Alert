@@ -1,34 +1,16 @@
-# LESCO Complaint Alert 3.0
+# LESCO Complaint Alert 4.0
 
-Android monitoring app for the LESCO IT Directorate support ticket Google Sheet.
+Android monitoring app for LESCO IT Directorate support tickets.
 
-## What this version does
+## Final behavior
+- URL and API key are entered once and saved locally.
+- After first setup, monitoring starts automatically whenever the app is opened.
+- Foreground monitoring checks for new pending complaints every 15 seconds.
+- New complaints trigger a high-priority notification with sound and vibration.
+- Pending complaints are listed in the app; tapping a complaint opens details and Resolve.
+- Resolving a complaint removes it from the pending list after refresh.
+- Monitoring restarts after device reboot when Android allows background startup.
+- The app requests notification permission and battery-optimization exemption on setup.
 
-- Runs monitoring through an Android foreground service.
-- Checks the Google Apps Script API every 60 seconds.
-- Shows **all pending complaints** in the main screen.
-- Pending means `New`, `In Progress`, or `Pending`; `Resolved` and `Closed` are hidden from the pending list.
-- Each complaint shows Ticket No, Issue/Nature, Status, Sub Division and Priority.
-- Tap any complaint to open full details.
-- Tap **Resolve** to change the Google Sheet status to `Resolved`.
-- After a successful resolve, the complaint immediately disappears from the pending list and the counters refresh.
-- Sends an Android notification when a newly registered pending complaint is detected.
-- Restarts monitoring after device boot when configuration has been saved.
-
-## Backend
-
-Use `../GoogleAppsScript/Code.gs`. It adds these API actions:
-
-- `GET action=pending` — returns only unresolved/unclosed complaints.
-- `GET action=resolve&ticketNo=...` — marks a complaint as Resolved.
-- Existing `tickets`, `ticket`, `stats`, and ticket-creation APIs remain available.
-
-After replacing the Apps Script code, deploy a **new Web App version**. Use the resulting `/exec` URL in the Android app.
-
-## Build APK with GitHub Actions
-
-Push the contents of this `Android` folder to the root of a GitHub repository. Then run:
-
-`Actions -> Build Complaint Alert APK`
-
-The generated debug APK is uploaded as the `ComplaintAlert-debug` artifact.
+## Important Android limitation
+If the user explicitly uses Android **Force Stop** on the app, Android prevents background execution until the app is opened again. OEM-specific settings such as Infinix Auto-start may also need to be enabled by the user.

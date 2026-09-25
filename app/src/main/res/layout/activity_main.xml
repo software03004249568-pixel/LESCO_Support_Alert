@@ -1,183 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#F5F8FC">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="LESCO Complaint Alert"
-            android:textColor="#0D47A1"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/connectionText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="● Monitoring Stopped"
-            android:textSize="15sp" />
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="15dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Monitoring Configuration"
-                    android:textSize="19sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:hint="Google Apps Script Web App URL">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/urlEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textUri" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="API Key">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/keyEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPassword" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/startButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Start Monitoring" />
-
-                    <Button
-                        android:id="@+id/stopButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="0.45"
-                        android:text="Stop" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Dashboard"
-            android:textSize="21sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/totalText"
-                android:layout_width="0dp"
-                android:layout_height="82dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Total\n0"
-                android:textSize="17sp" />
-            <TextView
-                android:id="@+id/pendingText"
-                android:layout_width="0dp"
-                android:layout_height="82dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Pending\n0"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F4F7FB">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardBackgroundColor="#0D47A1" app:cardCornerRadius="22dp" app:cardElevation="5dp">
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="18dp">
+        <ImageView android:layout_width="58dp" android:layout_height="58dp" android:src="@drawable/ic_app_icon" android:contentDescription="LESCO Complaint Alert" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingStart="14dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="LESCO Complaint Alert" android:textColor="#FFFFFF" android:textSize="25sp" android:textStyle="bold" />
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="IT Support Monitoring" android:textColor="#D9ECFF" android:textSize="14sp" />
         </LinearLayout>
+      </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/resolvedText"
-                android:layout_width="0dp"
-                android:layout_height="82dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Resolved\n0"
-                android:textSize="17sp" />
-            <TextView
-                android:id="@+id/urgentText"
-                android:layout_width="0dp"
-                android:layout_height="82dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Urgent\n0"
-                android:textSize="17sp" />
-        </LinearLayout>
+    <TextView android:id="@+id/connectionText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="#E8F5E9" android:padding="12dp" android:text="● Monitoring Stopped" android:textColor="#2E7D32" android:textSize="15sp" android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Pending Complaints"
-            android:textSize="21sp"
-            android:textStyle="bold" />
+    <com.google.android.material.card.MaterialCardView android:id="@+id/configCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" app:cardCornerRadius="18dp" app:cardElevation="2dp">
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="15dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Monitoring Configuration" android:textColor="#263238" android:textSize="19sp" android:textStyle="bold" />
+        <TextView android:id="@+id/configSavedText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="✓ Configuration saved securely on this phone" android:textColor="#2E7D32" android:textSize="14sp" android:visibility="gone" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="Google Apps Script Web App URL">
+          <com.google.android.material.textfield.TextInputEditText android:id="@+id/urlEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="API Key">
+          <com.google.android.material.textfield.TextInputEditText android:id="@+id/keyEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <Button android:id="@+id/saveStartButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Save &amp; Start Monitoring" android:textAllCaps="false" />
+        <Button android:id="@+id/changeConfigButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Change Configuration" android:textAllCaps="false" android:visibility="gone" />
+        <Button android:id="@+id/stopButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Pause Monitoring" android:textAllCaps="false" />
+      </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/emptyText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="25dp"
-            android:text="No pending complaints"
-            android:textSize="16sp"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/complaintList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="8dp" />
-
-        <Button
-            android:id="@+id/refreshButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Refresh Complaints" />
-
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Dashboard" android:textColor="#263238" android:textSize="22sp" android:textStyle="bold" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
+      <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginEnd="6dp" app:cardCornerRadius="16dp" app:cardBackgroundColor="#E3F2FD"><TextView android:id="@+id/totalText" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Total
+0" android:textColor="#0D47A1" android:textSize="17sp" android:textStyle="bold" /></com.google.android.material.card.MaterialCardView>
+      <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginStart="6dp" app:cardCornerRadius="16dp" app:cardBackgroundColor="#FFF3E0"><TextView android:id="@+id/pendingText" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Pending
+0" android:textColor="#E65100" android:textSize="17sp" android:textStyle="bold" /></com.google.android.material.card.MaterialCardView>
     </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="horizontal">
+      <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginEnd="6dp" app:cardCornerRadius="16dp" app:cardBackgroundColor="#E8F5E9"><TextView android:id="@+id/resolvedText" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Resolved
+0" android:textColor="#2E7D32" android:textSize="17sp" android:textStyle="bold" /></com.google.android.material.card.MaterialCardView>
+      <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginStart="6dp" app:cardCornerRadius="16dp" app:cardBackgroundColor="#FFEBEE"><TextView android:id="@+id/urgentText" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Urgent
+0" android:textColor="#C62828" android:textSize="17sp" android:textStyle="bold" /></com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Pending Complaints" android:textColor="#263238" android:textSize="22sp" android:textStyle="bold" />
+    <TextView android:id="@+id/emptyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:padding="28dp" android:text="✓ No pending complaints" android:textColor="#607D8B" android:textSize="16sp" android:visibility="gone" />
+    <LinearLayout android:id="@+id/complaintList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:orientation="vertical" />
+    <Button android:id="@+id/refreshButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Refresh Complaints" android:textAllCaps="false" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center" android:text="Background alerts are active while monitoring is enabled." android:textColor="#78909C" android:textSize="12sp" />
+</LinearLayout>
 </ScrollView>
