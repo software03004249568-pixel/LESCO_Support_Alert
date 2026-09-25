@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:padding="16dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -29,146 +29,155 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp">
+            android:layout_marginTop="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="15dp">
 
                 <TextView
-                    android:text="Monitoring Configuration"
-                    android:textSize="19sp"
-                    android:textStyle="bold"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-
-                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:hint="Google Apps Script Web App URL">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/urlEdit"
-                        android:inputType="textUri"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                    android:text="Monitoring Configuration"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
+                    android:hint="Google Apps Script Web App URL">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/urlEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textUri" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:hint="API Key">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/keyEdit"
-                        android:inputType="textPassword"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="14dp">
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/startButton"
-                        android:text="Start Monitoring"
                         android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"/>
+                        android:text="Start Monitoring" />
 
                     <Button
                         android:id="@+id/stopButton"
-                        android:text="Stop"
                         android:layout_width="0dp"
-                        android:layout_weight="0.45"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:layout_height="wrap_content"/>
+                        android:layout_weight="0.45"
+                        android:text="Stop" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
             android:text="Dashboard"
             android:textSize="21sp"
-            android:textStyle="bold"
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-
             <TextView
                 android:id="@+id/totalText"
+                android:layout_width="0dp"
+                android:layout_height="82dp"
+                android:layout_weight="1"
+                android:gravity="center"
                 android:text="Total\n0"
-                android:gravity="center"
-                android:textSize="18sp"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:padding="12dp"
-                android:layout_height="90dp"/>
-
+                android:textSize="17sp" />
             <TextView
-                android:id="@+id/newText"
-                android:text="New\n0"
-                android:gravity="center"
-                android:textSize="18sp"
+                android:id="@+id/pendingText"
                 android:layout_width="0dp"
+                android:layout_height="82dp"
                 android:layout_weight="1"
-                android:padding="12dp"
-                android:layout_height="90dp"/>
+                android:gravity="center"
+                android:text="Pending\n0"
+                android:textSize="17sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-
             <TextView
-                android:id="@+id/progressText"
-                android:text="In Progress\n0"
-                android:gravity="center"
-                android:textSize="17sp"
+                android:id="@+id/resolvedText"
                 android:layout_width="0dp"
+                android:layout_height="82dp"
                 android:layout_weight="1"
-                android:padding="12dp"
-                android:layout_height="90dp"/>
-
+                android:gravity="center"
+                android:text="Resolved\n0"
+                android:textSize="17sp" />
             <TextView
                 android:id="@+id/urgentText"
-                android:text="Urgent\n0"
-                android:gravity="center"
-                android:textSize="17sp"
                 android:layout_width="0dp"
+                android:layout_height="82dp"
                 android:layout_weight="1"
-                android:padding="12dp"
-                android:layout_height="90dp"/>
+                android:gravity="center"
+                android:text="Urgent\n0"
+                android:textSize="17sp" />
         </LinearLayout>
 
         <TextView
-            android:id="@+id/lastTicketText"
-            android:text="Last Ticket: —"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:layout_marginTop="12dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Pending Complaints"
+            android:textSize="21sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/emptyText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="25dp"
+            android:text="No pending complaints"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/complaintList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp" />
 
         <Button
             android:id="@+id/refreshButton"
-            android:text="Refresh Dashboard"
-            android:layout_marginTop="10dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Refresh Complaints" />
 
     </LinearLayout>
 </ScrollView>

@@ -1,40 +1,34 @@
-# Complaint Alert
+# LESCO Complaint Alert 3.0
 
-LESCO IT Directorate support ticket monitoring.
+Android monitoring app for the LESCO IT Directorate support ticket Google Sheet.
 
-## Architecture
+## What this version does
 
-Support Ticket form / VB.NET / web client
-        -> Google Apps Script doPost()
-        -> Google Sheet
-        -> Email notification to existing recipients
-        -> Android app polls Apps Script doGet()
-        -> Android notification for a new ticket
+- Runs monitoring through an Android foreground service.
+- Checks the Google Apps Script API every 60 seconds.
+- Shows **all pending complaints** in the main screen.
+- Pending means `New`, `In Progress`, or `Pending`; `Resolved` and `Closed` are hidden from the pending list.
+- Each complaint shows Ticket No, Issue/Nature, Status, Sub Division and Priority.
+- Tap any complaint to open full details.
+- Tap **Resolve** to change the Google Sheet status to `Resolved`.
+- After a successful resolve, the complaint immediately disappears from the pending list and the counters refresh.
+- Sends an Android notification when a newly registered pending complaint is detected.
+- Restarts monitoring after device boot when configuration has been saved.
 
-The Android app does NOT request Gmail read/notification-listener access.
+## Backend
 
-## Existing email recipients preserved
+Use `../GoogleAppsScript/Code.gs`. It adds these API actions:
 
-- software03004249568@gmail.com
-- waqas.tiwana@lesco.gov.pk
+- `GET action=pending` — returns only unresolved/unclosed complaints.
+- `GET action=resolve&ticketNo=...` — marks a complaint as Resolved.
+- Existing `tickets`, `ticket`, `stats`, and ticket-creation APIs remain available.
 
-## GitHub Actions
+After replacing the Apps Script code, deploy a **new Web App version**. Use the resulting `/exec` URL in the Android app.
 
-Push this Android folder's contents to the root of the GitHub repository.
+## Build APK with GitHub Actions
 
-Then open:
-Actions -> Build Complaint Alert APK
+Push the contents of this `Android` folder to the root of a GitHub repository. Then run:
 
-The APK is published as the workflow artifact `ComplaintAlert-debug`.
+`Actions -> Build Complaint Alert APK`
 
-## Google Apps Script
-
-Use `GoogleAppsScript/Code.gs`.
-
-Before deployment:
-1. Set a long random API_KEY.
-2. Run setupTicketSystem().
-3. Deploy as Web App.
-4. Execute as yourself.
-5. Access: Anyone.
-6. Put the /exec URL and API key into the Android app.
+The generated debug APK is uploaded as the `ComplaintAlert-debug` artifact.
