@@ -177,7 +177,7 @@ class ReportsActivity : AppCompatActivity() {
                 text = item.optString("status", "New")
                 textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (text.equals("Resolved", true) || text.equals("Closed", true)) android.graphics.Color.rgb(46, 125, 50) else android.graphics.Color.rgb(230, 81, 0))
+                setTextColor(if (text.equals("Resolved", ignoreCase = true) || text.equals("Closed", ignoreCase = true)) android.graphics.Color.rgb(46, 125, 50) else android.graphics.Color.rgb(230, 81, 0))
             }
             titleRow.addView(ticketNo); titleRow.addView(status); box.addView(titleRow)
             addDetail(box, "Complaint Date", item.optString("date"))
