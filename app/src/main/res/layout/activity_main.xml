@@ -49,6 +49,7 @@
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Pending Complaints" android:textColor="#263238" android:textSize="22sp" android:textStyle="bold" />
     <TextView android:id="@+id/emptyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:padding="28dp" android:text="✓ No pending complaints" android:textColor="#607D8B" android:textSize="16sp" android:visibility="gone" />
     <LinearLayout android:id="@+id/complaintList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:orientation="vertical" />
+    <Button android:id="@+id/reportsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="Complaint Reports  •  Date Range &amp; Export" android:textAllCaps="false" android:backgroundTint="#0D47A1" android:textColor="#FFFFFF" />
     <Button android:id="@+id/refreshButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Refresh Complaints" android:textAllCaps="false" />
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center" android:text="Background alerts are active while monitoring is enabled." android:textColor="#78909C" android:textSize="12sp" />
 </LinearLayout>

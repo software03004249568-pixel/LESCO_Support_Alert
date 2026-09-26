@@ -75,14 +75,15 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.saveStartButton).setOnClickListener { saveAndStart() }
         findViewById<Button>(R.id.stopButton).setOnClickListener { stopMonitoring() }
         findViewById<Button>(R.id.refreshButton).setOnClickListener { refreshAll() }
+        findViewById<Button>(R.id.reportsButton).setOnClickListener {
+            if (hasValidConfig()) startActivity(Intent(this, ReportsActivity::class.java))
+            else Toast.makeText(this, "Please configure the app first", Toast.LENGTH_SHORT).show()
+        }
         changeConfigButton.setOnClickListener { showConfiguration() }
 
         // Once configured, monitoring starts automatically whenever the app is opened.
         if (hasValidConfig()) {
             startMonitoringService()
-            // Always re-register the current FCM token with Apps Script.
-            // This is intentional: the server may have lost its device record
-            // even when Firebase has not issued a new token.
             registerFcmToken()
             requestBatteryOptimizationExemption()
             refreshAll()
@@ -91,10 +92,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (hasValidConfig()) {
-            registerFcmToken()
-            refreshAll()
-        }
+        if (hasValidConfig()) refreshAll()
     }
 
     private fun hasValidConfig(): Boolean {
@@ -250,83 +248,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerFcmToken(attempt: Int = 0) {
+    private fun registerFcmToken() {
         val baseUrl = prefs.getString("url", "") ?: return
         val key = prefs.getString("key", "") ?: return
         val userName = prefs.getString("userName", "") ?: return
-
-        if (baseUrl.isBlank() || key.isBlank() || userName.isBlank()) return
-
         try {
-            FirebaseMessaging.getInstance().token
-                .addOnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        if (attempt < 3) {
-                            android.os.Handler(mainLooper).postDelayed(
-                                { registerFcmToken(attempt + 1) },
-                                5000L
-                            )
-                        }
-                        return@addOnCompleteListener
-                    }
-
-                    val token = task.result?.trim().orEmpty()
-                    if (token.isBlank()) {
-                        if (attempt < 3) {
-                            android.os.Handler(mainLooper).postDelayed(
-                                { registerFcmToken(attempt + 1) },
-                                5000L
-                            )
-                        }
-                        return@addOnCompleteListener
-                    }
-
-                    executor.execute {
-                        try {
-                            val apiUrl = buildUrl(
-                                baseUrl,
-                                "registerDevice",
-                                key,
-                                mapOf(
-                                    "token" to token,
-                                    "userName" to userName
-                                )
-                            )
-
-                            val response = httpGet(apiUrl)
-                            val ok = try {
-                                JSONObject(response).optBoolean("success", true)
-                            } catch (_: Exception) {
-                                true
-                            }
-
-                            runOnUiThread {
-                                if (ok) {
-                                    prefs.edit()
-                                        .putString("fcmToken", token)
-                                        .apply()
-                                    connectionText.text =
-                                        "● Monitoring Active / FCM Registered"
-                                }
-                            }
-                        } catch (_: Exception) {
-                            if (attempt < 3) {
-                                android.os.Handler(mainLooper).postDelayed(
-                                    { registerFcmToken(attempt + 1) },
-                                    5000L
-                                )
-                            }
-                        }
-                    }
-                }
-        } catch (_: Exception) {
-            if (attempt < 3) {
-                android.os.Handler(mainLooper).postDelayed(
-                    { registerFcmToken(attempt + 1) },
-                    5000L
-                )
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) return@addOnCompleteListener
+                val token = task.result ?: return@addOnCompleteListener
+                executor.execute { try { httpGet(buildUrl(baseUrl, "registerDevice", key, mapOf("token" to token, "userName" to userName))) } catch (_: Exception) {} }
             }
-        }
+        } catch (_: Exception) {}
     }
 
     private fun requestNotificationPermission() {
