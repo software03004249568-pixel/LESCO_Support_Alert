@@ -18,7 +18,7 @@ import java.net.URLEncoder
 class ComplaintMessagingService : FirebaseMessagingService() {
 
     companion object {
-        private const val CHANNEL_ID = "complaints_high_v4"
+        private const val CHANNEL_ID = "complaints_high"
         private const val CHANNEL_NAME = "New LESCO Complaints"
     }
 
