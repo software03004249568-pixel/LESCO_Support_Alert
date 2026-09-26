@@ -1,16 +1,20 @@
-# LESCO Complaint Alert 4.0
+# LESCO Complaint Alert — Final 5.0
 
-Android monitoring app for LESCO IT Directorate support tickets.
+Android app for LESCO IT Directorate support ticket monitoring.
 
-## Final behavior
-- URL and API key are entered once and saved locally.
-- After first setup, monitoring starts automatically whenever the app is opened.
-- Foreground monitoring checks for new pending complaints every 15 seconds.
-- New complaints trigger a high-priority notification with sound and vibration.
-- Pending complaints are listed in the app; tapping a complaint opens details and Resolve.
-- Resolving a complaint removes it from the pending list after refresh.
-- Monitoring restarts after device reboot when Android allows background startup.
-- The app requests notification permission and battery-optimization exemption on setup.
+## Features
+- First-run URL + API key setup; values are stored locally on the phone.
+- Automatic monitoring after configuration.
+- Dashboard uses one `dashboard` API request for reliable loading.
+- Pending complaints are shown as cards; resolved/closed tickets disappear from the pending list.
+- Complaint details and Resolve action.
+- Foreground background monitoring with high-priority notification, sound and vibration.
+- Boot receiver restarts monitoring after device reboot when configuration exists.
+- Custom launcher/notification icon.
+- Battery optimization exemption request on supported Android versions.
 
-## Important Android limitation
-If the user explicitly uses Android **Force Stop** on the app, Android prevents background execution until the app is opened again. OEM-specific settings such as Infinix Auto-start may also need to be enabled by the user.
+## GitHub layout
+Upload the **contents of this Android folder** to the repository root, so `app/` and `.github/` are at the repository root.
+
+## Apps Script
+Deploy `GoogleAppsScript/Code.gs` as a Web App. Keep the same `/exec` URL after updating the deployment. The API key must match the key in the Android app.

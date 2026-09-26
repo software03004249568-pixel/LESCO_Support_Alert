@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
             connectionText.text = "● API Key is required"
             return
         }
-        prefs.edit().putString("url", url).putString("key", key).apply()
+        prefs.edit().putString("url", url).putString("key", key).putBoolean("monitoringEnabled", true).apply()
         updateConfigUi()
         startMonitoringService()
         requestBatteryOptimizationExemption()
@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMonitoringService() {
+        prefs.edit().putBoolean("monitoringEnabled", true).apply()
         ContextCompat.startForegroundService(this, Intent(this, MonitorService::class.java))
         connectionText.text = "● Monitoring Active / Server Connecting…"
     }
@@ -143,21 +144,27 @@ class MainActivity : AppCompatActivity() {
         val key = prefs.getString("key", "") ?: return
         executor.execute {
             try {
-                val statsRoot = JSONObject(httpGet(buildUrl(url, "stats", key)))
-                val pendingRoot = JSONObject(httpGet(buildUrl(url, "pending", key)))
-                if (!statsRoot.optBoolean("success") || !pendingRoot.optBoolean("success")) throw Exception("API returned an error")
-                val stats = statsRoot.getJSONObject("stats")
-                val tickets = pendingRoot.optJSONArray("tickets")
+                // One dashboard request avoids partial failures caused by two separate
+                // Apps Script calls and keeps the UI/API contract consistent.
+                val root = JSONObject(httpGet(buildUrl(url, "dashboard", key)))
+                if (!root.optBoolean("success", false)) {
+                    throw Exception(root.optString("message", "API returned an error"))
+                }
+                val stats = root.optJSONObject("stats") ?: JSONObject()
+                val tickets = root.optJSONArray("tickets") ?: JSONArray()
+                val count = root.optInt("count", tickets.length())
                 runOnUiThread {
                     totalText.text = "Total\n${stats.optInt("total")}"
-                    pendingText.text = "Pending\n${pendingRoot.optInt("count")}"
+                    pendingText.text = "Pending\n$count"
                     resolvedText.text = "Resolved\n${stats.optInt("resolved")}"
                     urgentText.text = "Urgent\n${stats.optInt("urgent")}"
                     renderTickets(tickets)
                     connectionText.text = "● Monitoring Active / Server Connected"
                 }
             } catch (ex: Exception) {
-                runOnUiThread { connectionText.text = "● Server check failed" }
+                runOnUiThread {
+                    connectionText.text = "● Server check failed: ${ex.message ?: "Connection error"}"
+                }
             }
         }
     }
