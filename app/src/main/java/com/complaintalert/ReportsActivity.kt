@@ -173,12 +173,26 @@ class ReportsActivity : AppCompatActivity() {
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             }
-            val status = TextView(this).apply {
-                text = item.optString("status", "New")
-                textSize = 13f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (text.equals("Resolved", ignoreCase = true) || text.equals("Closed", ignoreCase = true)) android.graphics.Color.rgb(46, 125, 50) else android.graphics.Color.rgb(230, 81, 0))
-            }
+          val status = TextView(this).apply {
+    text = item.optString("status", "New")
+    textSize = 13f
+    setTypeface(null, android.graphics.Typeface.BOLD)
+
+    val statusValue = text.toString()
+
+    setTextColor(
+        if (
+            statusValue.equals("Resolved", ignoreCase = true) ||
+            statusValue.equals("Closed", ignoreCase = true)
+        ) {
+            android.graphics.Color.rgb(46, 125, 50)
+        } else {
+            android.graphics.Color.rgb(230, 81, 0)
+        }
+    )
+}
+            
+        }
             titleRow.addView(ticketNo); titleRow.addView(status); box.addView(titleRow)
             addDetail(box, "Complaint Date", item.optString("date"))
             addDetail(box, "Sub Division", item.optString("subDivisionCode"))
