@@ -17,6 +17,9 @@
       <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="15dp">
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Monitoring Configuration" android:textColor="#263238" android:textSize="19sp" android:textStyle="bold" />
         <TextView android:id="@+id/configSavedText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="✓ Configuration saved securely on this phone" android:textColor="#2E7D32" android:textSize="14sp" android:visibility="gone" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="User Name">
+          <com.google.android.material.textfield.TextInputEditText android:id="@+id/userNameEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPersonName" />
+        </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="Google Apps Script Web App URL">
           <com.google.android.material.textfield.TextInputEditText android:id="@+id/urlEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" />
         </com.google.android.material.textfield.TextInputLayout>

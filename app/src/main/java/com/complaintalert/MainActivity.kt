@@ -23,6 +23,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -33,6 +34,7 @@ import java.util.concurrent.Executors
 class MainActivity : AppCompatActivity() {
     private lateinit var urlEdit: TextInputEditText
     private lateinit var keyEdit: TextInputEditText
+    private lateinit var userNameEdit: TextInputEditText
     private lateinit var configCard: MaterialCardView
     private lateinit var configSavedText: TextView
     private lateinit var connectionText: TextView
@@ -52,6 +54,7 @@ class MainActivity : AppCompatActivity() {
 
         urlEdit = findViewById(R.id.urlEdit)
         keyEdit = findViewById(R.id.keyEdit)
+        userNameEdit = findViewById(R.id.userNameEdit)
         configCard = findViewById(R.id.configCard)
         configSavedText = findViewById(R.id.configSavedText)
         connectionText = findViewById(R.id.connectionText)
@@ -65,6 +68,7 @@ class MainActivity : AppCompatActivity() {
 
         urlEdit.setText(prefs.getString("url", ""))
         keyEdit.setText(prefs.getString("key", ""))
+        userNameEdit.setText(prefs.getString("userName", ""))
         updateConfigUi()
         requestNotificationPermission()
 
@@ -76,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         // Once configured, monitoring starts automatically whenever the app is opened.
         if (hasValidConfig()) {
             startMonitoringService()
+            registerFcmToken()
             requestBatteryOptimizationExemption()
             refreshAll()
         }
@@ -89,12 +94,14 @@ class MainActivity : AppCompatActivity() {
     private fun hasValidConfig(): Boolean {
         val url = prefs.getString("url", "") ?: ""
         val key = prefs.getString("key", "") ?: ""
-        return url.startsWith("https://") && key.isNotBlank()
+        val userName = prefs.getString("userName", "") ?: ""
+        return url.startsWith("https://") && key.isNotBlank() && userName.isNotBlank()
     }
 
     private fun saveAndStart() {
         val url = urlEdit.text?.toString()?.trim().orEmpty()
         val key = keyEdit.text?.toString()?.trim().orEmpty()
+        val userName = userNameEdit.text?.toString()?.trim().orEmpty()
         if (!url.startsWith("https://") || !url.contains("/exec")) {
             connectionText.text = "● Enter a valid Google Apps Script /exec URL"
             return
@@ -103,9 +110,14 @@ class MainActivity : AppCompatActivity() {
             connectionText.text = "● API Key is required"
             return
         }
-        prefs.edit().putString("url", url).putString("key", key).putBoolean("monitoringEnabled", true).apply()
+        if (userName.isBlank()) {
+            connectionText.text = "● User Name is required"
+            return
+        }
+        prefs.edit().putString("url", url).putString("key", key).putString("userName", userName).putBoolean("monitoringEnabled", true).apply()
         updateConfigUi()
         startMonitoringService()
+        registerFcmToken()
         requestBatteryOptimizationExemption()
         refreshAll()
     }
@@ -127,6 +139,7 @@ class MainActivity : AppCompatActivity() {
         configSavedText.visibility = if (configured) View.VISIBLE else View.GONE
         urlEdit.visibility = if (configured) View.GONE else View.VISIBLE
         keyEdit.visibility = if (configured) View.GONE else View.VISIBLE
+        userNameEdit.visibility = if (configured) View.GONE else View.VISIBLE
         findViewById<Button>(R.id.saveStartButton).visibility = if (configured) View.GONE else View.VISIBLE
         changeConfigButton.visibility = if (configured) View.VISIBLE else View.GONE
     }
@@ -134,6 +147,7 @@ class MainActivity : AppCompatActivity() {
     private fun showConfiguration() {
         urlEdit.visibility = View.VISIBLE
         keyEdit.visibility = View.VISIBLE
+        userNameEdit.visibility = View.VISIBLE
         findViewById<Button>(R.id.saveStartButton).visibility = View.VISIBLE
         changeConfigButton.visibility = View.GONE
     }
@@ -221,13 +235,26 @@ class MainActivity : AppCompatActivity() {
         val key = prefs.getString("key", "") ?: ""
         executor.execute {
             try {
-                val root = JSONObject(httpGet(buildUrl(baseUrl, "resolve", key, mapOf("ticketNo" to ticketNo, "resolution" to "Resolved from Complaint Alert app"))))
+                val root = JSONObject(httpGet(buildUrl(baseUrl, "resolve", key, mapOf("ticketNo" to ticketNo, "resolution" to "Resolved from Complaint Alert app", "closedBy" to (prefs.getString("userName", "Unknown User") ?: "Unknown User")))))
                 if (!root.optBoolean("success")) throw Exception(root.optString("message", "Resolve failed"))
                 runOnUiThread { dialog.dismiss(); Toast.makeText(this, "Complaint resolved successfully", Toast.LENGTH_SHORT).show(); refreshAll() }
             } catch (ex: Exception) {
                 runOnUiThread { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, "Resolve failed: ${ex.message}", Toast.LENGTH_LONG).show() }
             }
         }
+    }
+
+    private fun registerFcmToken() {
+        val baseUrl = prefs.getString("url", "") ?: return
+        val key = prefs.getString("key", "") ?: return
+        val userName = prefs.getString("userName", "") ?: return
+        try {
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) return@addOnCompleteListener
+                val token = task.result ?: return@addOnCompleteListener
+                executor.execute { try { httpGet(buildUrl(baseUrl, "registerDevice", key, mapOf("token" to token, "userName" to userName))) } catch (_: Exception) {} }
+            }
+        } catch (_: Exception) {}
     }
 
     private fun requestNotificationPermission() {
