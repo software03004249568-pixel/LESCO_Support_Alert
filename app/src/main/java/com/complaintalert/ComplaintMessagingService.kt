@@ -11,6 +11,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 
 class ComplaintMessagingService : FirebaseMessagingService() {
 
@@ -22,9 +25,27 @@ class ComplaintMessagingService : FirebaseMessagingService() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+
+        // Make sure the current Firebase token is registered
+        // even if Firebase does not call onNewToken again.
+        try {
+            com.google.firebase.messaging.FirebaseMessaging
+                .getInstance()
+                .token
+                .addOnSuccessListener { token ->
+                    if (!token.isNullOrBlank()) {
+                        registerToken(token)
+                    }
+                }
+        } catch (_: Exception) {
+        }
     }
 
     override fun onNewToken(token: String) {
+        registerToken(token)
+    }
+
+    private fun registerToken(token: String) {
 
         val prefs = getSharedPreferences("config", MODE_PRIVATE)
 
@@ -43,23 +64,23 @@ class ComplaintMessagingService : FirebaseMessagingService() {
                 val apiUrl =
                     url +
                     "?action=registerDevice" +
-                    "&key=" + java.net.URLEncoder.encode(key, "UTF-8") +
-                    "&token=" + java.net.URLEncoder.encode(token, "UTF-8") +
-                    "&userName=" + java.net.URLEncoder.encode(user, "UTF-8")
+                    "&key=" + URLEncoder.encode(key, "UTF-8") +
+                    "&token=" + URLEncoder.encode(token, "UTF-8") +
+                    "&userName=" + URLEncoder.encode(user, "UTF-8")
 
                 val connection =
-                    java.net.URL(apiUrl).openConnection()
-                            as java.net.HttpURLConnection
+                    URL(apiUrl).openConnection()
+                            as HttpURLConnection
 
                 try {
 
                     connection.requestMethod = "GET"
-                    connection.connectTimeout = 10000
-                    connection.readTimeout = 10000
+                    connection.connectTimeout = 15000
+                    connection.readTimeout = 15000
 
-                    connection.inputStream.bufferedReader().use {
-                        it.readText()
-                    }
+                    connection.inputStream
+                        .bufferedReader()
+                        .use { it.readText() }
 
                 } finally {
 
@@ -67,7 +88,7 @@ class ComplaintMessagingService : FirebaseMessagingService() {
                 }
 
             } catch (_: Exception) {
-                // Token registration failure should not crash the app.
+                // Never crash because of token registration failure.
             }
 
         }.start()
@@ -147,7 +168,10 @@ class ComplaintMessagingService : FirebaseMessagingService() {
             "Issue: $issue"
 
         val notification =
-            NotificationCompat.Builder(this, CHANNEL_ID)
+            NotificationCompat.Builder(
+                this,
+                CHANNEL_ID
+            )
                 .setSmallIcon(R.drawable.ic_stat_complaint)
 
                 .setContentTitle(
@@ -196,15 +220,24 @@ class ComplaintMessagingService : FirebaseMessagingService() {
 
         try {
 
-            NotificationManagerCompat
-                .from(this)
-                .notify(
-                    ticketNo.hashCode(),
-                    notification
-                )
+            if (
+                Build.VERSION.SDK_INT < 33 ||
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+
+                NotificationManagerCompat
+                    .from(this)
+                    .notify(
+                        ticketNo.hashCode(),
+                        notification
+                    )
+            }
 
         } catch (_: SecurityException) {
-            // POST_NOTIFICATIONS permission is required on Android 13+.
         }
     }
 
@@ -220,7 +253,9 @@ class ComplaintMessagingService : FirebaseMessagingService() {
             )
 
         val existing =
-            manager.getNotificationChannel(CHANNEL_ID)
+            manager.getNotificationChannel(
+                CHANNEL_ID
+            )
 
         if (existing != null) {
             return
@@ -253,7 +288,9 @@ class ComplaintMessagingService : FirebaseMessagingService() {
                 setShowBadge(true)
 
                 setSound(
-                    android.provider.Settings.System.DEFAULT_NOTIFICATION_URI,
+                    android.provider.Settings
+                        .System.DEFAULT_NOTIFICATION_URI,
+
                     AudioAttributes.Builder()
                         .setUsage(
                             AudioAttributes.USAGE_NOTIFICATION
