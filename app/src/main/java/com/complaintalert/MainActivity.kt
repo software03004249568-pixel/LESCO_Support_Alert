@@ -14,7 +14,6 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -32,6 +31,7 @@ import java.net.URLEncoder
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var urlEdit: TextInputEditText
     private lateinit var keyEdit: TextInputEditText
     private lateinit var userNameEdit: TextInputEditText
@@ -45,248 +45,1496 @@ class MainActivity : AppCompatActivity() {
     private lateinit var complaintList: LinearLayout
     private lateinit var emptyText: TextView
     private lateinit var changeConfigButton: Button
+
     private val executor = Executors.newSingleThreadExecutor()
-    private val prefs by lazy { getSharedPreferences("config", MODE_PRIVATE) }
+
+    private val prefs by lazy {
+        getSharedPreferences("config", MODE_PRIVATE)
+    }
+
+    /*
+     * These two flags keep Server and FCM status separately.
+     * refreshAll() will no longer erase FCM Registered status.
+     */
+    @Volatile
+    private var serverConnected = false
+
+    @Volatile
+    private var fcmRegistered = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
 
         urlEdit = findViewById(R.id.urlEdit)
         keyEdit = findViewById(R.id.keyEdit)
         userNameEdit = findViewById(R.id.userNameEdit)
+
         configCard = findViewById(R.id.configCard)
         configSavedText = findViewById(R.id.configSavedText)
         connectionText = findViewById(R.id.connectionText)
+
         totalText = findViewById(R.id.totalText)
         pendingText = findViewById(R.id.pendingText)
         resolvedText = findViewById(R.id.resolvedText)
         urgentText = findViewById(R.id.urgentText)
+
         complaintList = findViewById(R.id.complaintList)
         emptyText = findViewById(R.id.emptyText)
+
         changeConfigButton = findViewById(R.id.changeConfigButton)
 
-        urlEdit.setText(prefs.getString("url", ""))
-        keyEdit.setText(prefs.getString("key", ""))
-        userNameEdit.setText(prefs.getString("userName", ""))
+
+        urlEdit.setText(
+            prefs.getString("url", "")
+        )
+
+        keyEdit.setText(
+            prefs.getString("key", "")
+        )
+
+        userNameEdit.setText(
+            prefs.getString("userName", "")
+        )
+
+
+        /*
+         * Restore previous FCM registration state if available.
+         */
+        fcmRegistered =
+            prefs.getBoolean("fcmRegistered", false)
+
+
         updateConfigUi()
+
         requestNotificationPermission()
 
-        findViewById<Button>(R.id.saveStartButton).setOnClickListener { saveAndStart() }
-        findViewById<Button>(R.id.stopButton).setOnClickListener { stopMonitoring() }
-        findViewById<Button>(R.id.refreshButton).setOnClickListener { refreshAll() }
-        findViewById<Button>(R.id.reportsButton).setOnClickListener {
-            if (hasValidConfig()) startActivity(Intent(this, ReportsActivity::class.java))
-            else Toast.makeText(this, "Please configure the app first", Toast.LENGTH_SHORT).show()
-        }
-        changeConfigButton.setOnClickListener { showConfiguration() }
 
-        // Once configured, monitoring starts automatically whenever the app is opened.
+        findViewById<Button>(R.id.saveStartButton)
+            .setOnClickListener {
+                saveAndStart()
+            }
+
+
+        findViewById<Button>(R.id.stopButton)
+            .setOnClickListener {
+                stopMonitoring()
+            }
+
+
+        findViewById<Button>(R.id.refreshButton)
+            .setOnClickListener {
+                refreshAll()
+            }
+
+
+        findViewById<Button>(R.id.reportsButton)
+            .setOnClickListener {
+
+                if (hasValidConfig()) {
+
+                    startActivity(
+                        Intent(
+                            this,
+                            ReportsActivity::class.java
+                        )
+                    )
+
+                } else {
+
+                    Toast.makeText(
+                        this,
+                        "Please configure the app first",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                }
+            }
+
+
+        changeConfigButton.setOnClickListener {
+            showConfiguration()
+        }
+
+
+        /*
+         * Once configured, monitoring starts automatically.
+         */
         if (hasValidConfig()) {
+
             startMonitoringService()
+
+            /*
+             * Always register the current FCM token again.
+             */
             registerFcmToken()
+
             requestBatteryOptimizationExemption()
+
             refreshAll()
         }
     }
 
+
     override fun onResume() {
+
         super.onResume()
-        if (hasValidConfig()) refreshAll()
+
+        if (hasValidConfig()) {
+
+            /*
+             * Register again when app comes to foreground.
+             * This makes sure the Apps Script has the current token.
+             */
+            registerFcmToken()
+
+            refreshAll()
+        }
     }
+
 
     private fun hasValidConfig(): Boolean {
-        val url = prefs.getString("url", "") ?: ""
-        val key = prefs.getString("key", "") ?: ""
-        val userName = prefs.getString("userName", "") ?: ""
-        return url.startsWith("https://") && key.isNotBlank() && userName.isNotBlank()
+
+        val url =
+            prefs.getString("url", "") ?: ""
+
+        val key =
+            prefs.getString("key", "") ?: ""
+
+        val userName =
+            prefs.getString("userName", "") ?: ""
+
+        return url.startsWith("https://") &&
+                key.isNotBlank() &&
+                userName.isNotBlank()
     }
 
+
     private fun saveAndStart() {
-        val url = urlEdit.text?.toString()?.trim().orEmpty()
-        val key = keyEdit.text?.toString()?.trim().orEmpty()
-        val userName = userNameEdit.text?.toString()?.trim().orEmpty()
-        if (!url.startsWith("https://") || !url.contains("/exec")) {
-            connectionText.text = "● Enter a valid Google Apps Script /exec URL"
+
+        val url =
+            urlEdit.text
+                ?.toString()
+                ?.trim()
+                .orEmpty()
+
+        val key =
+            keyEdit.text
+                ?.toString()
+                ?.trim()
+                .orEmpty()
+
+        val userName =
+            userNameEdit.text
+                ?.toString()
+                ?.trim()
+                .orEmpty()
+
+
+        if (!url.startsWith("https://") ||
+            !url.contains("/exec")
+        ) {
+
+            connectionText.text =
+                "● Enter a valid Google Apps Script /exec URL"
+
             return
         }
+
+
         if (key.isBlank()) {
-            connectionText.text = "● API Key is required"
+
+            connectionText.text =
+                "● API Key is required"
+
             return
         }
+
+
         if (userName.isBlank()) {
-            connectionText.text = "● User Name is required"
+
+            connectionText.text =
+                "● User Name is required"
+
             return
         }
-        prefs.edit().putString("url", url).putString("key", key).putString("userName", userName).putBoolean("monitoringEnabled", true).apply()
+
+
+        /*
+         * Save configuration.
+         */
+        prefs.edit()
+            .putString("url", url)
+            .putString("key", key)
+            .putString("userName", userName)
+            .putBoolean("monitoringEnabled", true)
+            .apply()
+
+
+        /*
+         * New configuration means we should verify FCM again.
+         */
+        fcmRegistered = false
+
+        prefs.edit()
+            .putBoolean("fcmRegistered", false)
+            .apply()
+
+
+        serverConnected = false
+
+
         updateConfigUi()
+
         startMonitoringService()
+
         registerFcmToken()
+
         requestBatteryOptimizationExemption()
+
         refreshAll()
     }
 
+
     private fun startMonitoringService() {
-        prefs.edit().putBoolean("monitoringEnabled", true).apply()
-        ContextCompat.startForegroundService(this, Intent(this, MonitorService::class.java))
-        connectionText.text = "● Monitoring Active / Server Connecting…"
+
+        prefs.edit()
+            .putBoolean("monitoringEnabled", true)
+            .apply()
+
+
+        ContextCompat.startForegroundService(
+            this,
+            Intent(
+                this,
+                MonitorService::class.java
+            )
+        )
+
+
+        updateConnectionStatus()
     }
+
 
     private fun stopMonitoring() {
-        stopService(Intent(this, MonitorService::class.java))
-        prefs.edit().putBoolean("monitoringEnabled", false).apply()
-        connectionText.text = "● Monitoring Paused"
+
+        stopService(
+            Intent(
+                this,
+                MonitorService::class.java
+            )
+        )
+
+
+        prefs.edit()
+            .putBoolean("monitoringEnabled", false)
+            .apply()
+
+
+        serverConnected = false
+
+        updateConnectionStatus()
     }
+
+
+    /*
+     * Central status function.
+     *
+     * This is the important fix.
+     *
+     * Server status and FCM status are handled separately,
+     * so refreshAll() cannot remove "FCM Registered".
+     */
+    private fun updateConnectionStatus() {
+
+        val monitoring =
+            prefs.getBoolean(
+                "monitoringEnabled",
+                false
+            )
+
+
+        if (!monitoring) {
+
+            connectionText.text =
+                "● Monitoring Paused"
+
+            return
+        }
+
+
+        when {
+
+            serverConnected && fcmRegistered -> {
+
+                connectionText.text =
+                    "● Monitoring Active / Server Connected / FCM Registered"
+            }
+
+
+            serverConnected -> {
+
+                connectionText.text =
+                    "● Monitoring Active / Server Connected / FCM Registering…"
+            }
+
+
+            fcmRegistered -> {
+
+                connectionText.text =
+                    "● Monitoring Active / FCM Registered / Server Connecting…"
+            }
+
+
+            else -> {
+
+                connectionText.text =
+                    "● Monitoring Active / Server Connecting…"
+            }
+        }
+    }
+
 
     private fun updateConfigUi() {
-        val configured = hasValidConfig()
-        configSavedText.visibility = if (configured) View.VISIBLE else View.GONE
-        urlEdit.visibility = if (configured) View.GONE else View.VISIBLE
-        keyEdit.visibility = if (configured) View.GONE else View.VISIBLE
-        userNameEdit.visibility = if (configured) View.GONE else View.VISIBLE
-        findViewById<Button>(R.id.saveStartButton).visibility = if (configured) View.GONE else View.VISIBLE
-        changeConfigButton.visibility = if (configured) View.VISIBLE else View.GONE
+
+        val configured =
+            hasValidConfig()
+
+
+        configSavedText.visibility =
+            if (configured)
+                View.VISIBLE
+            else
+                View.GONE
+
+
+        urlEdit.visibility =
+            if (configured)
+                View.GONE
+            else
+                View.VISIBLE
+
+
+        keyEdit.visibility =
+            if (configured)
+                View.GONE
+            else
+                View.VISIBLE
+
+
+        userNameEdit.visibility =
+            if (configured)
+                View.GONE
+            else
+                View.VISIBLE
+
+
+        findViewById<Button>(
+            R.id.saveStartButton
+        ).visibility =
+            if (configured)
+                View.GONE
+            else
+                View.VISIBLE
+
+
+        changeConfigButton.visibility =
+            if (configured)
+                View.VISIBLE
+            else
+                View.GONE
     }
+
 
     private fun showConfiguration() {
-        urlEdit.visibility = View.VISIBLE
-        keyEdit.visibility = View.VISIBLE
-        userNameEdit.visibility = View.VISIBLE
-        findViewById<Button>(R.id.saveStartButton).visibility = View.VISIBLE
-        changeConfigButton.visibility = View.GONE
+
+        urlEdit.visibility =
+            View.VISIBLE
+
+        keyEdit.visibility =
+            View.VISIBLE
+
+        userNameEdit.visibility =
+            View.VISIBLE
+
+
+        findViewById<Button>(
+            R.id.saveStartButton
+        ).visibility =
+            View.VISIBLE
+
+
+        changeConfigButton.visibility =
+            View.GONE
     }
 
+
     private fun refreshAll() {
-        if (!hasValidConfig()) return
-        val url = prefs.getString("url", "") ?: return
-        val key = prefs.getString("key", "") ?: return
+
+        if (!hasValidConfig())
+            return
+
+
+        val url =
+            prefs.getString("url", "")
+                ?: return
+
+        val key =
+            prefs.getString("key", "")
+                ?: return
+
+
         executor.execute {
+
             try {
-                // One dashboard request avoids partial failures caused by two separate
-                // Apps Script calls and keeps the UI/API contract consistent.
-                val root = JSONObject(httpGet(buildUrl(url, "dashboard", key)))
-                if (!root.optBoolean("success", false)) {
-                    throw Exception(root.optString("message", "API returned an error"))
+
+                /*
+                 * One dashboard request.
+                 */
+                val root =
+                    JSONObject(
+                        httpGet(
+                            buildUrl(
+                                url,
+                                "dashboard",
+                                key
+                            )
+                        )
+                    )
+
+
+                if (!root.optBoolean(
+                        "success",
+                        false
+                    )
+                ) {
+
+                    throw Exception(
+                        root.optString(
+                            "message",
+                            "API returned an error"
+                        )
+                    )
                 }
-                val stats = root.optJSONObject("stats") ?: JSONObject()
-                val tickets = root.optJSONArray("tickets") ?: JSONArray()
-                val count = root.optInt("count", tickets.length())
+
+
+                val stats =
+                    root.optJSONObject(
+                        "stats"
+                    ) ?: JSONObject()
+
+
+                val tickets =
+                    root.optJSONArray(
+                        "tickets"
+                    ) ?: JSONArray()
+
+
+                val count =
+                    root.optInt(
+                        "count",
+                        tickets.length()
+                    )
+
+
+                /*
+                 * Server is connected.
+                 */
+                serverConnected = true
+
+
                 runOnUiThread {
-                    totalText.text = "Total\n${stats.optInt("total")}"
-                    pendingText.text = "Pending\n$count"
-                    resolvedText.text = "Resolved\n${stats.optInt("resolved")}"
-                    urgentText.text = "Urgent\n${stats.optInt("urgent")}"
+
+                    totalText.text =
+                        "Total\n${stats.optInt("total")}"
+
+
+                    pendingText.text =
+                        "Pending\n$count"
+
+
+                    resolvedText.text =
+                        "Resolved\n${stats.optInt("resolved")}"
+
+
+                    urgentText.text =
+                        "Urgent\n${stats.optInt("urgent")}"
+
+
                     renderTickets(tickets)
-                    connectionText.text = "● Monitoring Active / Server Connected"
+
+
+                    /*
+                     * IMPORTANT:
+                     * Do NOT directly write "Server Connected" here.
+                     * updateConnectionStatus() preserves FCM Registered.
+                     */
+                    updateConnectionStatus()
                 }
+
             } catch (ex: Exception) {
+
+                serverConnected = false
+
+
                 runOnUiThread {
-                    connectionText.text = "● Server check failed: ${ex.message ?: "Connection error"}"
+
+                    /*
+                     * If FCM is already registered, keep that information.
+                     */
+                    if (fcmRegistered) {
+
+                        connectionText.text =
+                            "● FCM Registered / Server check failed"
+
+                    } else {
+
+                        connectionText.text =
+                            "● Server check failed: ${
+                                ex.message
+                                    ?: "Connection error"
+                            }"
+                    }
                 }
             }
         }
     }
 
-    private fun renderTickets(tickets: JSONArray?) {
+
+    private fun renderTickets(
+        tickets: JSONArray?
+    ) {
+
         complaintList.removeAllViews()
-        if (tickets == null || tickets.length() == 0) {
-            emptyText.visibility = View.VISIBLE
+
+
+        if (tickets == null ||
+            tickets.length() == 0
+        ) {
+
+            emptyText.visibility =
+                View.VISIBLE
+
             return
         }
-        emptyText.visibility = View.GONE
-        for (i in 0 until tickets.length()) complaintList.addView(createTicketRow(tickets.getJSONObject(i)))
+
+
+        emptyText.visibility =
+            View.GONE
+
+
+        for (i in 0 until tickets.length()) {
+
+            complaintList.addView(
+                createTicketRow(
+                    tickets.getJSONObject(i)
+                )
+            )
+        }
     }
 
-    private fun createTicketRow(ticket: JSONObject): View {
-        val card = MaterialCardView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, 0, 0, dp(10)) }
-            radius = dp(16).toFloat()
-            strokeWidth = dp(1)
-            strokeColor = Color.rgb(219, 228, 240)
-            cardElevation = dp(2).toFloat()
-            isClickable = true
-            isFocusable = true
-        }
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(15), dp(13), dp(15), dp(13)) }
-        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        val no = TextView(this).apply {
-            text = ticket.optString("ticketNo", "-"); textSize = 17f; setTextColor(Color.rgb(18, 75, 150)); setTypeface(null, Typeface.BOLD)
-            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
-        }
-        val status = TextView(this).apply { text = ticket.optString("status", "New"); textSize = 14f; setTextColor(Color.rgb(198, 40, 40)); setTypeface(null, Typeface.BOLD) }
-        top.addView(no); top.addView(status); box.addView(top)
-        box.addView(TextView(this).apply { text = "Issue: ${ticket.optString("issueType", "-")}"; textSize = 15f; setTypeface(null, Typeface.BOLD); setPadding(0, dp(6), 0, 0) })
-        box.addView(TextView(this).apply { text = ticket.optString("issue", "-"); textSize = 14f; maxLines = 3; setPadding(0, dp(3), 0, 0) })
-        box.addView(TextView(this).apply { text = "Sub Division: ${ticket.optString("subDivisionCode", "-")}    Priority: ${ticket.optString("priority", "Normal")}"; textSize = 13f; setTextColor(Color.DKGRAY); setPadding(0, dp(7), 0, 0) })
+
+    private fun createTicketRow(
+        ticket: JSONObject
+    ): View {
+
+        val card =
+            MaterialCardView(this).apply {
+
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        -1,
+                        -2
+                    ).apply {
+
+                        setMargins(
+                            0,
+                            0,
+                            0,
+                            dp(10)
+                        )
+                    }
+
+
+                radius =
+                    dp(16).toFloat()
+
+
+                strokeWidth =
+                    dp(1)
+
+
+                strokeColor =
+                    Color.rgb(
+                        219,
+                        228,
+                        240
+                    )
+
+
+                cardElevation =
+                    dp(2).toFloat()
+
+
+                isClickable =
+                    true
+
+                isFocusable =
+                    true
+            }
+
+
+        val box =
+            LinearLayout(this).apply {
+
+                orientation =
+                    LinearLayout.VERTICAL
+
+                setPadding(
+                    dp(15),
+                    dp(13),
+                    dp(15),
+                    dp(13)
+                )
+            }
+
+
+        val top =
+            LinearLayout(this).apply {
+
+                orientation =
+                    LinearLayout.HORIZONTAL
+
+                gravity =
+                    Gravity.CENTER_VERTICAL
+            }
+
+
+        val no =
+            TextView(this).apply {
+
+                text =
+                    ticket.optString(
+                        "ticketNo",
+                        "-"
+                    )
+
+                textSize =
+                    17f
+
+                setTextColor(
+                    Color.rgb(
+                        18,
+                        75,
+                        150
+                    )
+                )
+
+                setTypeface(
+                    null,
+                    Typeface.BOLD
+                )
+
+
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        0,
+                        -2,
+                        1f
+                    )
+            }
+
+
+        val status =
+            TextView(this).apply {
+
+                text =
+                    ticket.optString(
+                        "status",
+                        "New"
+                    )
+
+                textSize =
+                    14f
+
+                setTextColor(
+                    Color.rgb(
+                        198,
+                        40,
+                        40
+                    )
+                )
+
+                setTypeface(
+                    null,
+                    Typeface.BOLD
+                )
+            }
+
+
+        top.addView(no)
+        top.addView(status)
+
+        box.addView(top)
+
+
+        box.addView(
+            TextView(this).apply {
+
+                text =
+                    "Issue: ${
+                        ticket.optString(
+                            "issueType",
+                            "-"
+                        )
+                    }"
+
+                textSize =
+                    15f
+
+                setTypeface(
+                    null,
+                    Typeface.BOLD
+                )
+
+                setPadding(
+                    0,
+                    dp(6),
+                    0,
+                    0
+                )
+            }
+        )
+
+
+        box.addView(
+            TextView(this).apply {
+
+                text =
+                    ticket.optString(
+                        "issue",
+                        "-"
+                    )
+
+                textSize =
+                    14f
+
+                maxLines =
+                    3
+
+                setPadding(
+                    0,
+                    dp(3),
+                    0,
+                    0
+                )
+            }
+        )
+
+
+        box.addView(
+            TextView(this).apply {
+
+                text =
+                    "Sub Division: ${
+                        ticket.optString(
+                            "subDivisionCode",
+                            "-"
+                        )
+                    }    Priority: ${
+                        ticket.optString(
+                            "priority",
+                            "Normal"
+                        )
+                    }"
+
+                textSize =
+                    13f
+
+                setTextColor(
+                    Color.DKGRAY
+                )
+
+                setPadding(
+                    0,
+                    dp(7),
+                    0,
+                    0
+                )
+            }
+        )
+
+
         card.addView(box)
-        card.setOnClickListener { showTicketDetails(ticket) }
+
+
+        card.setOnClickListener {
+
+            showTicketDetails(
+                ticket
+            )
+        }
+
+
         return card
     }
 
-    private fun showTicketDetails(ticket: JSONObject) {
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(4), dp(22), 0) }
-        fun addField(label: String, value: String) {
-            layout.addView(TextView(this).apply { text = "$label\n${if (value.isBlank()) "-" else value}"; textSize = 15f; setPadding(0, dp(7), 0, dp(7)) })
+
+    private fun showTicketDetails(
+        ticket: JSONObject
+    ) {
+
+        val layout =
+            LinearLayout(this).apply {
+
+                orientation =
+                    LinearLayout.VERTICAL
+
+                setPadding(
+                    dp(22),
+                    dp(4),
+                    dp(22),
+                    0
+                )
+            }
+
+
+        fun addField(
+            label: String,
+            value: String
+        ) {
+
+            layout.addView(
+                TextView(this).apply {
+
+                    text =
+                        "$label\n${
+                            if (value.isBlank())
+                                "-"
+                            else
+                                value
+                        }"
+
+                    textSize =
+                        15f
+
+                    setPadding(
+                        0,
+                        dp(7),
+                        0,
+                        dp(7)
+                    )
+                }
+            )
         }
-        addField("Complaint No", ticket.optString("ticketNo")); addField("Date", ticket.optString("date")); addField("Sub Division", ticket.optString("subDivisionCode")); addField("Operator", ticket.optString("operatorName")); addField("Mobile", ticket.optString("mobileNumber")); addField("Issue Type", ticket.optString("issueType")); addField("Issue", ticket.optString("issue")); addField("Priority", ticket.optString("priority")); addField("Status", ticket.optString("status")); addField("Remarks", ticket.optString("remarks"))
-        val dialog = AlertDialog.Builder(this).setTitle("Complaint Details").setView(layout).setNegativeButton("Close", null).setPositiveButton("Resolve", null).create()
-        dialog.setOnShowListener { dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false; resolveTicket(ticket.optString("ticketNo"), dialog) } }
+
+
+        addField(
+            "Complaint No",
+            ticket.optString("ticketNo")
+        )
+
+        addField(
+            "Date",
+            ticket.optString("date")
+        )
+
+        addField(
+            "Sub Division",
+            ticket.optString(
+                "subDivisionCode"
+            )
+        )
+
+        addField(
+            "Operator",
+            ticket.optString(
+                "operatorName"
+            )
+        )
+
+        addField(
+            "Mobile",
+            ticket.optString(
+                "mobileNumber"
+            )
+        )
+
+        addField(
+            "Issue Type",
+            ticket.optString(
+                "issueType"
+            )
+        )
+
+        addField(
+            "Issue",
+            ticket.optString(
+                "issue"
+            )
+        )
+
+        addField(
+            "Priority",
+            ticket.optString(
+                "priority"
+            )
+        )
+
+        addField(
+            "Status",
+            ticket.optString(
+                "status"
+            )
+        )
+
+        addField(
+            "Remarks",
+            ticket.optString(
+                "remarks"
+            )
+        )
+
+
+        val dialog =
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Complaint Details"
+                )
+                .setView(layout)
+                .setNegativeButton(
+                    "Close",
+                    null
+                )
+                .setPositiveButton(
+                    "Resolve",
+                    null
+                )
+                .create()
+
+
+        dialog.setOnShowListener {
+
+            dialog.getButton(
+                AlertDialog.BUTTON_POSITIVE
+            ).setOnClickListener {
+
+                dialog.getButton(
+                    AlertDialog.BUTTON_POSITIVE
+                ).isEnabled = false
+
+
+                resolveTicket(
+                    ticket.optString(
+                        "ticketNo"
+                    ),
+                    dialog
+                )
+            }
+        }
+
+
         dialog.show()
     }
 
-    private fun resolveTicket(ticketNo: String, dialog: AlertDialog) {
-        val baseUrl = prefs.getString("url", "") ?: ""
-        val key = prefs.getString("key", "") ?: ""
+
+    private fun resolveTicket(
+        ticketNo: String,
+        dialog: AlertDialog
+    ) {
+
+        val baseUrl =
+            prefs.getString(
+                "url",
+                ""
+            ) ?: ""
+
+
+        val key =
+            prefs.getString(
+                "key",
+                ""
+            ) ?: ""
+
+
         executor.execute {
+
             try {
-                val root = JSONObject(httpGet(buildUrl(baseUrl, "resolve", key, mapOf("ticketNo" to ticketNo, "resolution" to "Resolved from Complaint Alert app", "closedBy" to (prefs.getString("userName", "Unknown User") ?: "Unknown User")))))
-                if (!root.optBoolean("success")) throw Exception(root.optString("message", "Resolve failed"))
-                runOnUiThread { dialog.dismiss(); Toast.makeText(this, "Complaint resolved successfully", Toast.LENGTH_SHORT).show(); refreshAll() }
+
+                val root =
+                    JSONObject(
+                        httpGet(
+                            buildUrl(
+                                baseUrl,
+                                "resolve",
+                                key,
+                                mapOf(
+                                    "ticketNo" to ticketNo,
+                                    "resolution" to
+                                            "Resolved from Complaint Alert app",
+                                    "closedBy" to
+                                            (
+                                                    prefs.getString(
+                                                        "userName",
+                                                        "Unknown User"
+                                                    )
+                                                        ?: "Unknown User"
+                                                    )
+                                )
+                            )
+                        )
+                    )
+
+
+                if (!root.optBoolean(
+                        "success"
+                    )
+                ) {
+
+                    throw Exception(
+                        root.optString(
+                            "message",
+                            "Resolve failed"
+                        )
+                    )
+                }
+
+
+                runOnUiThread {
+
+                    dialog.dismiss()
+
+
+                    Toast.makeText(
+                        this,
+                        "Complaint resolved successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+
+                    refreshAll()
+                }
+
             } catch (ex: Exception) {
-                runOnUiThread { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, "Resolve failed: ${ex.message}", Toast.LENGTH_LONG).show() }
+
+                runOnUiThread {
+
+                    dialog.getButton(
+                        AlertDialog.BUTTON_POSITIVE
+                    ).isEnabled = true
+
+
+                    Toast.makeText(
+                        this,
+                        "Resolve failed: ${
+                            ex.message
+                        }",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
 
+
+    /*
+     * FCM REGISTRATION
+     *
+     * This version:
+     *
+     * 1. Gets the current Firebase token.
+     * 2. Sends it to Apps Script.
+     * 3. Checks the server response.
+     * 4. Saves FCM registration state.
+     * 5. Shows "FCM Registered".
+     */
     private fun registerFcmToken() {
-        val baseUrl = prefs.getString("url", "") ?: return
-        val key = prefs.getString("key", "") ?: return
-        val userName = prefs.getString("userName", "") ?: return
+
+        val baseUrl =
+            prefs.getString(
+                "url",
+                ""
+            ) ?: return
+
+
+        val key =
+            prefs.getString(
+                "key",
+                ""
+            ) ?: return
+
+
+        val userName =
+            prefs.getString(
+                "userName",
+                ""
+            ) ?: return
+
+
+        if (baseUrl.isBlank() ||
+            key.isBlank() ||
+            userName.isBlank()
+        ) {
+            return
+        }
+
+
         try {
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) return@addOnCompleteListener
-                val token = task.result ?: return@addOnCompleteListener
-                executor.execute { try { httpGet(buildUrl(baseUrl, "registerDevice", key, mapOf("token" to token, "userName" to userName))) } catch (_: Exception) {} }
+
+            FirebaseMessaging
+                .getInstance()
+                .token
+                .addOnCompleteListener { task ->
+
+
+                    if (!task.isSuccessful) {
+
+                        fcmRegistered = false
+
+                        prefs.edit()
+                            .putBoolean(
+                                "fcmRegistered",
+                                false
+                            )
+                            .apply()
+
+
+                        runOnUiThread {
+
+                            updateConnectionStatus()
+                        }
+
+
+                        return@addOnCompleteListener
+                    }
+
+
+                    val token =
+                        task.result
+
+
+                    if (token.isNullOrBlank()) {
+
+                        fcmRegistered = false
+
+                        prefs.edit()
+                            .putBoolean(
+                                "fcmRegistered",
+                                false
+                            )
+                            .apply()
+
+
+                        runOnUiThread {
+
+                            updateConnectionStatus()
+                        }
+
+
+                        return@addOnCompleteListener
+                    }
+
+
+                    /*
+                     * Save current token locally.
+                     */
+                    prefs.edit()
+                        .putString(
+                            "fcmToken",
+                            token
+                        )
+                        .apply()
+
+
+                    executor.execute {
+
+                        try {
+
+                            val responseText =
+                                httpGet(
+                                    buildUrl(
+                                        baseUrl,
+                                        "registerDevice",
+                                        key,
+                                        mapOf(
+                                            "token" to token,
+                                            "userName" to userName
+                                        )
+                                    )
+                                )
+
+
+                            /*
+                             * Parse Apps Script response.
+                             */
+                            val response =
+                                try {
+                                    JSONObject(
+                                        responseText
+                                    )
+                                } catch (_: Exception) {
+                                    JSONObject()
+                                }
+
+
+                            val success =
+                                response.optBoolean(
+                                    "success",
+                                    false
+                                )
+
+
+                            val registered =
+                                response.optBoolean(
+                                    "registered",
+                                    false
+                                )
+
+
+                            /*
+                             * Registration is successful
+                             * when Apps Script confirms success.
+                             */
+                            val ok =
+                                success &&
+                                        (
+                                                registered ||
+                                                        response.has(
+                                                            "registered"
+                                                        )
+                                                )
+
+
+                            /*
+                             * For compatibility with an older
+                             * Apps Script response, success alone
+                             * is also accepted.
+                             */
+                            val finalOk =
+                                ok || success
+
+
+                            runOnUiThread {
+
+                                if (finalOk) {
+
+                                    fcmRegistered =
+                                        true
+
+
+                                    prefs.edit()
+                                        .putBoolean(
+                                            "fcmRegistered",
+                                            true
+                                        )
+                                        .apply()
+
+
+                                    /*
+                                     * This will now remain visible
+                                     * even after refreshAll().
+                                     */
+                                    updateConnectionStatus()
+
+                                } else {
+
+                                    fcmRegistered =
+                                        false
+
+
+                                    prefs.edit()
+                                        .putBoolean(
+                                            "fcmRegistered",
+                                            false
+                                        )
+                                        .apply()
+
+
+                                    updateConnectionStatus()
+                                }
+                            }
+
+                        } catch (_: Exception) {
+
+                            /*
+                             * Do not immediately destroy a previously
+                             * successful registration state because of
+                             * a temporary network failure.
+                             */
+                            runOnUiThread {
+
+                                updateConnectionStatus()
+                            }
+                        }
+                    }
+                }
+
+        } catch (_: Exception) {
+
+            runOnUiThread {
+
+                updateConnectionStatus()
             }
-        } catch (_: Exception) {}
+        }
     }
+
 
     private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)
+
+        if (
+            Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.POST_NOTIFICATIONS
+                ),
+                100
+            )
         }
     }
 
+
     private fun requestBatteryOptimizationExemption() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
-        val pm = getSystemService(POWER_SERVICE) as PowerManager
-        if (pm.isIgnoringBatteryOptimizations(packageName)) return
+
+        if (
+            Build.VERSION.SDK_INT <
+            Build.VERSION_CODES.M
+        ) {
+            return
+        }
+
+
+        val pm =
+            getSystemService(
+                POWER_SERVICE
+            ) as PowerManager
+
+
+        if (
+            pm.isIgnoringBatteryOptimizations(
+                packageName
+            )
+        ) {
+            return
+        }
+
+
         try {
-            startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
-        } catch (_: Exception) { }
+
+            startActivity(
+                Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse(
+                        "package:$packageName"
+                    )
+                )
+            )
+
+        } catch (_: Exception) {
+        }
     }
 
-    private fun buildUrl(base: String, action: String, key: String, extra: Map<String, String> = emptyMap()): String {
-        val params = LinkedHashMap<String, String>(); params["action"] = action; params["key"] = key; params.putAll(extra)
-        return base + "?" + params.entries.joinToString("&") { URLEncoder.encode(it.key, "UTF-8") + "=" + URLEncoder.encode(it.value, "UTF-8") }
+
+    private fun buildUrl(
+        base: String,
+        action: String,
+        key: String,
+        extra: Map<String, String> = emptyMap()
+    ): String {
+
+        val params =
+            LinkedHashMap<String, String>()
+
+
+        params["action"] =
+            action
+
+        params["key"] =
+            key
+
+
+        params.putAll(extra)
+
+
+        return base +
+                "?" +
+                params.entries.joinToString("&") {
+
+                    URLEncoder.encode(
+                        it.key,
+                        "UTF-8"
+                    ) +
+                            "=" +
+                            URLEncoder.encode(
+                                it.value,
+                                "UTF-8"
+                            )
+                }
     }
 
-    private fun httpGet(api: String): String {
-        val conn = URL(api).openConnection() as HttpURLConnection
-        conn.requestMethod = "GET"; conn.connectTimeout = 15000; conn.readTimeout = 15000
-        return try { conn.inputStream.bufferedReader().use { it.readText() } } finally { conn.disconnect() }
+
+    private fun httpGet(
+        api: String
+    ): String {
+
+        val conn =
+            URL(api)
+                .openConnection()
+                    as HttpURLConnection
+
+
+        conn.requestMethod =
+            "GET"
+
+
+        conn.connectTimeout =
+            15000
+
+
+        conn.readTimeout =
+            15000
+
+
+        return try {
+
+            conn.inputStream
+                .bufferedReader()
+                .use {
+                    it.readText()
+                }
+
+        } finally {
+
+            conn.disconnect()
+        }
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
-    override fun onDestroy() { executor.shutdownNow(); super.onDestroy() }
+
+    private fun dp(
+        value: Int
+    ): Int {
+
+        return (
+                value *
+                        resources
+                            .displayMetrics
+                            .density
+                ).toInt()
+    }
+
+
+    override fun onDestroy() {
+
+        executor.shutdownNow()
+
+        super.onDestroy()
+    }
 }
